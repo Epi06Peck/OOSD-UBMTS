@@ -1,0 +1,145 @@
+/* --- GLOBAL STYLES --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f7f6;
+  color: #333;
+  /* Centering logic for Login/Register pages */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* --- DASHBOARD & FORM CONTAINERS --- */
+header {
+  background: #4a148c;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed; /* Keeps it at the top if used in dashboard */
+  top: 0;
+  width: 100%;
+}
+
+main {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* This targets your #loginForm and #registerForm to look like dashboard sections */
+#loginForm,
+#registerForm,
+section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ddd;
+  width: 100%;
+  max-width: 400px; /* Limits width for login/register cards */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Title colors */
+section h3,
+#loginForm::before,
+#registerForm::before {
+  margin-bottom: 1rem;
+  color: #4a148c;
+  font-weight: 600;
+  display: block;
+  text-align: center;
+}
+
+#loginForm::before {
+  content: "UBMTS Login";
+  font-size: 1.2rem;
+}
+#registerForm::before {
+  content: "Register Account";
+  font-size: 1.2rem;
+}
+
+/* --- FORM ELEMENTS (EXACTLY AS PROVIDED) --- */
+form input,
+form select,
+form button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+form button {
+  background: #4a148c;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+form button:hover {
+  background: #38006b;
+}
+
+/* --- SESSION CARDS & SPECIAL BUTTONS --- */
+.session-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fafafa;
+}
+
+.session-card h3 {
+  margin-bottom: 6px;
+  color: #4a148c;
+}
+
+.btn-register,
+.btn-approve {
+  background: #4a148c;
+  color: white;
+}
+
+.btn-cancel,
+.btn-delete,
+.btn-delete-admin,
+.btn-remove {
+  background: #d32f2f;
+  color: white;
+}
+
+/* Link styling for the text below the form */
+p {
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+a {
+  color: #4a148c;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.hidden {
+  display: none !important;
+}
