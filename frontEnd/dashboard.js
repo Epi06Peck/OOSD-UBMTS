@@ -91,29 +91,51 @@ async function loadTutorUI(user) {
   const content = document.getElementById("tutorActions");
 
   content.innerHTML = `
-    <section>
-      <h3>Create a New Session</h3>
-      <form id="createSessionForm">
-        <input type="text"   id="subject"   placeholder="Subject (e.g. Algebra II)" required />
-        <select id="dayOfWeek">
-          <option value="Monday">Monday</option>
-          <option value="Tuesday">Tuesday</option>
-          <option value="Wednesday">Wednesday</option>
-          <option value="Thursday">Thursday</option>
-          <option value="Friday">Friday</option>
-        </select>
-        <input type="time"   id="startTime" required />
-        <input type="number" id="capacity"  placeholder="Max students (e.g. 25)" min="1" required />
-        <button type="submit">Publish Session</button>
-      </form>
-      <p id="sessionMsg"></p>
-    </section>
+  <section>
+    <h3>Create a New Session</h3>
+    <form id="createSessionForm">
+      <input type="text" id="subject" placeholder="Subject" required />
 
-    <section>
-      <h3>Your Sessions</h3>
-      <div id="tutorSessionList"><p>Loading...</p></div>
-    </section>
-  `;
+      <select id="dayOfWeek">
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+      </select>
+
+      <label>Start Time</label>
+      <input type="time" id="startTime" required />
+
+      <label>End Time</label>
+      <input type="time" id="endTime" required />
+
+      <input
+        type="number"
+        id="capacity"
+        placeholder="Max students"
+        min="1"
+        required
+      />
+
+      <input
+        type="url"
+        id="meetingLink"
+        placeholder="Meeting Link"
+        required
+      />
+
+      <button type="submit">Publish Session</button>
+    </form>
+
+    <p id="sessionMsg"></p>
+  </section>
+
+  <section>
+    <h3>Your Sessions</h3>
+    <div id="tutorSessionList"><p>Loading...</p></div>
+  </section>
+`;
 
   // Load existing sessions
   await loadTutorSessionList(user.user_id);
