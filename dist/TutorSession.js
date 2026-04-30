@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TutorSessionImpl = void 0;
 const TutorSessionDef_1 = require("./TutorSessionDef");
-const dbconnection_1 = __importDefault(require("../db/dbconnection"));
+const dbconnection_1 = require("../db/dbconnection");
 class TutorSessionImpl extends TutorSessionDef_1.TutorSession {
   constructor(sID, tID, subject, day, start, end, cap, meetingLink = null) {
     super(sID, tID, subject, day, start, end, cap, meetingLink);

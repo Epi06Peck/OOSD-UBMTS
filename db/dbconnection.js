@@ -17,3 +17,4 @@ pool.query("SELECT NOW()", (err, res) => {
 });
 
 module.exports = pool;
+module.exports.default = pool;
