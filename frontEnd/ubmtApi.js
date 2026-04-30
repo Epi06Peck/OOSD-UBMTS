@@ -49,7 +49,9 @@ export async function createSession(sessionData) {
 // ==========================
 export async function getTutorSessions(tutorID) {
   const res = await fetch(`${BASE}/tutor/sessions/${tutorID}`);
-  return res.json();
+  const data = await res.json();
+  console.log("API response:", data);
+  return data;
 }
 
 // ==========================

@@ -174,7 +174,7 @@ async function loadTutorSessionList(tutorID) {
   try {
     const sessions = await getTutorSessions(tutorID);
 
-    if (!sessions.length) {
+    if (!sessions || sessions.length === 0) {
       list.innerHTML = "<p>You haven't created any sessions yet.</p>";
       return;
     }
@@ -184,12 +184,13 @@ async function loadTutorSessionList(tutorID) {
       const card = document.createElement("div");
       card.className = "session-card";
       card.innerHTML = `
-        <h3>${s.subject}</h3>
-        <p><strong>Day:</strong> ${s.day_of_week}</p>
-        <p><strong>Time:</strong> ${s.start_time}</p>
-        <p><strong>Enrolled:</strong> ${s.current_enrolled ?? 0} / ${s.capacity}</p>
-        <button class="btn-delete" data-id="${s.session_id}">Delete Session</button>
-      `;
+          <h3>${s.subject}</h3>
+          <p><strong>Day:</strong> ${s.day_of_week}</p>
+          <p><strong>Time:</strong> ${s.start_time} - ${s.end_time}</p>
+          <p><strong>Enrolled:</strong> ${s.current_enrolled ?? 0} / ${s.capacity}</p>
+          <p><strong>Link:</strong> <a href="${s.meeting_link}" target="_blank">Join Session</a></p>
+          <button class="btn-delete" data-id="${s.session_id}">Delete Session</button>
+        `;
       card.querySelector(".btn-delete").addEventListener("click", async (e) => {
         if (!confirm("Delete this session?")) return;
         const sid = e.target.dataset.id;

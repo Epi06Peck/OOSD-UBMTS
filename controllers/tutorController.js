@@ -64,7 +64,7 @@ const createSession = async (req, res) => {
         session.meetingLink,
       ],
     );
-
+    console.log("Session created successfully:", result.rows[0]);
     res.status(201).json({
       message: "Session created!",
       session: result.rows[0],
@@ -87,7 +87,7 @@ const getTutorSessions = async (req, res) => {
 
     const result = await pool.query(
       `SELECT * FROM tutor_sessions WHERE tutor_id = $1 ORDER BY day_of_week`,
-      [tutor.user_id],
+      [tutorID],
     );
 
     res.json(result.rows);
