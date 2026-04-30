@@ -2,6 +2,7 @@ import {
   getSessions,
   registerSession,
   cancelSession,
+  getMyEnrollments,
   createSession,
   getTutorSessions,
   deleteSession,
@@ -40,37 +41,135 @@ async function loadStudentUI(user) {
   content.innerHTML = "<p>Loading sessions...</p>";
 
   try {
-    const sessions = await getSessions();
+    // Fetch all sessions AND student's current enrollments in parallel
+    const [sessions, enrolled] = await Promise.all([
+      getSessions(),
+      getMyEnrollments(user.user_id),
+    ]);
 
     if (sessions.length === 0) {
       content.innerHTML = "<p>No sessions available right now.</p>";
       return;
     }
 
+    // Build a Set of enrolled session IDs for quick lookup
+    const enrolledIDs = new Set(enrolled.map((e) => e.session_id));
+
     content.innerHTML = "";
 
     sessions.forEach((session) => {
+      const isEnrolled = enrolledIDs.has(session.session_id);
+
       const card = document.createElement("div");
       card.className = "session-card";
+      card.id = `card-${session.session_id}`;
       card.innerHTML = `
-        <h3>${session.title || session.subject || "Session"}</h3>
+        <h3>${session.subject || "Session"}</h3>
+        <p><strong>Tutor:</strong> ${session.tutor_name || "TBD"}</p>
         <p><strong>Day:</strong> ${session.day_of_week || "TBD"}</p>
-        <p><strong>Time:</strong> ${session.start_time || "TBD"}</p>
-        <p><strong>Spots:</strong> ${session.current_enrolled ?? 0} / ${session.capacity ?? "?"}</p>
-        <button class="btn-register">Enroll</button>
-        <button class="btn-cancel">Cancel</button>
+        <p><strong>Start:</strong> ${session.start_time || "TBD"}</p>
+        <p><strong>End:</strong> ${session.end_time || "TBD"}</p>
+        <p><strong>Spots:</strong> <span id="spots-${session.session_id}">${session.current_enrolled ?? 0} / ${session.capacity ?? "?"}</span></p>
+        <p><strong>Link:</strong> <a href="${session.meeting_link}" target="_blank">Join Session</a></p>
+        <button 
+          class="btn-register" 
+          id="enroll-${session.session_id}"
+          ${isEnrolled ? "disabled" : ""}
+          style="${isEnrolled ? "opacity:0.5; cursor:not-allowed; background:#999;" : ""}"
+        >
+          ${isEnrolled ? "✓ Enrolled" : "Enroll"}
+        </button>
+        <button 
+          class="btn-cancel" 
+          id="cancel-${session.session_id}"
+          ${!isEnrolled ? "disabled" : ""}
+          style="${!isEnrolled ? "opacity:0.5; cursor:not-allowed;" : ""}"
+        >
+          Cancel
+        </button>
       `;
 
+      // ENROLL
       card
         .querySelector(".btn-register")
         .addEventListener("click", async () => {
-          const result = await registerSession(user.user_id, session.id);
-          alert(result.message || "Enrolled!");
+          const enrollBtn = document.getElementById(
+            `enroll-${session.session_id}`,
+          );
+          const cancelBtn = document.getElementById(
+            `cancel-${session.session_id}`,
+          );
+
+          enrollBtn.disabled = true;
+          enrollBtn.textContent = "Enrolling...";
+
+          const result = await registerSession(
+            user.user_id,
+            session.session_id,
+          );
+
+          if (result.error) {
+            alert(result.error);
+            enrollBtn.disabled = false;
+            enrollBtn.textContent = "Enroll";
+            return;
+          }
+
+          // Success — gray out enroll, activate cancel, update spots
+          enrollBtn.textContent = "✓ Enrolled";
+          enrollBtn.style.opacity = "0.5";
+          enrollBtn.style.cursor = "not-allowed";
+
+          cancelBtn.disabled = false;
+          cancelBtn.style.opacity = "1";
+          cancelBtn.style.cursor = "pointer";
+
+          // Update spot count
+          const spotsEl = document.getElementById(
+            `spots-${session.session_id}`,
+          );
+          const [cur, cap] = spotsEl.textContent.split(" / ");
+          spotsEl.textContent = `${parseInt(cur) + 1} / ${cap}`;
         });
 
+      // CANCEL
       card.querySelector(".btn-cancel").addEventListener("click", async () => {
-        const result = await cancelSession(user.user_id, session.id);
-        alert(result.message || "Cancelled!");
+        const enrollBtn = document.getElementById(
+          `enroll-${session.session_id}`,
+        );
+        const cancelBtn = document.getElementById(
+          `cancel-${session.session_id}`,
+        );
+
+        if (!confirm("Cancel your enrollment in this session?")) return;
+
+        cancelBtn.disabled = true;
+        cancelBtn.textContent = "Cancelling...";
+
+        const result = await cancelSession(user.user_id, session.session_id);
+
+        if (result.error) {
+          alert(result.error);
+          cancelBtn.disabled = false;
+          cancelBtn.textContent = "Cancel";
+          return;
+        }
+
+        // Success — reactivate enroll, gray out cancel
+        enrollBtn.disabled = false;
+        enrollBtn.textContent = "Enroll";
+        enrollBtn.style.opacity = "1";
+        enrollBtn.style.cursor = "pointer";
+
+        cancelBtn.disabled = true;
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.style.opacity = "0.5";
+        cancelBtn.style.cursor = "not-allowed";
+
+        // Update spot count
+        const spotsEl = document.getElementById(`spots-${session.session_id}`);
+        const [cur, cap] = spotsEl.textContent.split(" / ");
+        spotsEl.textContent = `${Math.max(0, parseInt(cur) - 1)} / ${cap}`;
       });
 
       content.appendChild(card);

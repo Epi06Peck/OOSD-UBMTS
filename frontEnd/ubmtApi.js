@@ -21,6 +21,14 @@ export async function registerSession(studentID, sessionID) {
 }
 
 // ==========================
+// get enrollments
+// ==========================
+export async function getMyEnrollments(studentID) {
+  const res = await fetch(`${BASE}/student/enrollments/${studentID}`);
+  return res.json();
+}
+
+// ==========================
 // CANCEL SESSION
 // ==========================
 export async function cancelSession(studentID, sessionID) {
