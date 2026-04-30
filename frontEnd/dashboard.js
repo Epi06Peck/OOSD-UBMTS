@@ -151,7 +151,9 @@ async function loadTutorUI(user) {
         subject: document.getElementById("subject").value,
         day_of_week: document.getElementById("dayOfWeek").value,
         start_time: document.getElementById("startTime").value,
+        end_time: document.getElementById("endTime").value,
         capacity: parseInt(document.getElementById("capacity").value),
+        meeting_link: document.getElementById("meetingLink").value,
       };
 
       try {
