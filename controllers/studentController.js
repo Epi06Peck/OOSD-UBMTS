@@ -1,9 +1,4 @@
 const { StudentImpl } = require("../dist/student");
-// TEMP (until DB is used)
-let sessions = [
-  { id: 1, title: "Math Session" },
-  { id: 2, title: "Programming Session" },
-];
 
 // ==========================
 // GET ALL SESSIONS

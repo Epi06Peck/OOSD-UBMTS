@@ -55,7 +55,7 @@ const createSession = async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
        RETURNING *`,
       [
-        tutor.user_id,
+        tutor_id,
         session.subject,
         session.dayOfWeek,
         session.startTime,
