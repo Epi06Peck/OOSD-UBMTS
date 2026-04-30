@@ -138,5 +138,75 @@ class TutorSessionImpl extends TutorSessionDef_1.TutorSession {
       throw new Error("Meeting link is required.");
     }
   }
+
+  // EDIT SESSION
+  async editSession(fields) {
+    const {
+      subject,
+      day_of_week,
+      start_time,
+      end_time,
+      capacity,
+      meeting_link,
+    } = fields;
+
+    // Business logic validation
+    if (capacity !== undefined && capacity < 1) {
+      throw new Error("Capacity must be at least 1");
+    }
+
+    // Can't reduce capacity below current enrollment
+    if (capacity !== undefined && capacity < this.currentEnrollment) {
+      throw new Error("Capacity cannot be less than current enrollment");
+    }
+
+    const result = await dbconnection_1.default.query(
+      `UPDATE tutor_sessions
+     SET
+       subject      = COALESCE($1, subject),
+       day_of_week  = COALESCE($2, day_of_week),
+       start_time   = COALESCE($3, start_time),
+       end_time     = COALESCE($4, end_time),
+       capacity     = COALESCE($5, capacity),
+       meeting_link = COALESCE($6, meeting_link)
+     WHERE session_id = $7
+     RETURNING *`,
+      [
+        subject,
+        day_of_week,
+        start_time,
+        end_time,
+        capacity,
+        meeting_link,
+        this.sessionID,
+      ],
+    );
+
+    if (result.rows.length === 0) throw new Error("Session not found");
+
+    // Sync in-memory state with DB
+    const updated = result.rows[0];
+    this.subject = updated.subject;
+    this.dayOfWeek = updated.day_of_week;
+    this.startTime = updated.start_time;
+    this.endTime = updated.end_time;
+    this.capacity = updated.capacity;
+    this.meetingLink = updated.meeting_link;
+
+    return updated;
+  }
+
+  // VIEW REGISTERED STUDENTS
+  static async getRegisteredStudents(sessionID) {
+    const result = await dbconnection_1.default.query(
+      `SELECT u.user_id, u.name, u.email
+     FROM session_registrations sr
+     JOIN users u ON sr.student_id = u.user_id
+     WHERE sr.session_id = $1
+     ORDER BY u.name`,
+      [sessionID],
+    );
+    return result.rows;
+  }
 }
 exports.TutorSessionImpl = TutorSessionImpl;

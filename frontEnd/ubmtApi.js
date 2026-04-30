@@ -71,3 +71,17 @@ export async function deleteSession(sessionID) {
   });
   return res.json();
 }
+
+export async function editSession(sessionID, sessionData) {
+  const res = await fetch(`${BASE}/tutor/sessions/${sessionID}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sessionData),
+  });
+  return res.json();
+}
+
+export async function getRegisteredStudents(sessionID) {
+  const res = await fetch(`${BASE}/tutor/sessions/${sessionID}/students`);
+  return res.json();
+}

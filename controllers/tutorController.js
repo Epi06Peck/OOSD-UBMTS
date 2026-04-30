@@ -90,10 +90,47 @@ const enrollStudent = async (req, res) => {
   }
 };
 
+// EDIT SESSION
+const editSession = async (req, res) => {
+  try {
+    const { sessionID } = req.params;
+    const session = new TutorSessionImpl(
+      sessionID,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    );
+    const updated = await session.editSession(req.body);
+    res.json({ message: "Session updated!", session: updated });
+  } catch (err) {
+    console.error("Edit session error:", err.message);
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// VIEW REGISTERED STUDENTS
+const getRegisteredStudents = async (req, res) => {
+  try {
+    const { sessionID } = req.params;
+
+    const students = await TutorSessionImpl.getRegisteredStudents(sessionID);
+    res.json(students);
+  } catch (err) {
+    console.error("Get students error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   createSession,
   getTutorSessions,
   deleteSession,
   getAllSessions,
   enrollStudent,
+  editSession, // ← add
+  getRegisteredStudents, // ← add
 };

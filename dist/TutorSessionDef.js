@@ -32,6 +32,9 @@ class TutorSession {
   async createSession() {}
 
   async enrollStudent() {}
+  // Add these inside the class, after deleteById
+  async editSession(fields) {}
+  static async getRegisteredStudents(sessionID) {}
 
   // Static methods for fetching
   static async getByTutorId(tutorID) {}

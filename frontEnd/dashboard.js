@@ -6,6 +6,8 @@ import {
   createSession,
   getTutorSessions,
   deleteSession,
+  editSession,
+  getRegisteredStudents,
 } from "./ubmtApi.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -283,19 +285,127 @@ async function loadTutorSessionList(tutorID) {
       const card = document.createElement("div");
       card.className = "session-card";
       card.innerHTML = `
-          <h3>${s.subject}</h3>
-          <p><strong>Day:</strong> ${s.day_of_week}</p>
-          <p><strong>Time:</strong> ${s.start_time} - ${s.end_time}</p>
-          <p><strong>Enrolled:</strong> ${s.current_enrolled ?? 0} / ${s.capacity}</p>
-          <p><strong>Link:</strong> <a href="${s.meeting_link}" target="_blank">Join Session</a></p>
-          <button class="btn-delete" data-id="${s.session_id}">Delete Session</button>
-        `;
+    <h3>${s.subject}</h3>
+    <p><strong>Day:</strong> ${s.day_of_week}</p>
+    <p><strong>Time:</strong> ${s.start_time} - ${s.end_time}</p>
+    <p><strong>Enrolled:</strong> ${s.current_enrolled ?? 0} / ${s.capacity}</p>
+    <p><strong>Link:</strong> <a href="${s.meeting_link}" target="_blank">Join Session</a></p>
+    <div style="margin-top:8px;">
+      <button class="btn-edit"     data-id="${s.session_id}">Edit</button>
+      <button class="btn-students" data-id="${s.session_id}">View Students</button>
+      <button class="btn-delete"   data-id="${s.session_id}">Delete</button>
+    </div>
+
+    <!-- Edit form (hidden by default) -->
+    <div class="edit-form" id="edit-${s.session_id}" style="display:none; margin-top:12px;">
+      <input type="text"   class="edit-subject"  placeholder="Subject"      value="${s.subject}" />
+      <select class="edit-day">
+        ${["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+          .map(
+            (d) =>
+              `<option value="${d}" ${s.day_of_week === d ? "selected" : ""}>${d}</option>`,
+          )
+          .join("")}
+      </select>
+      <input type="time" class="edit-start"    value="${s.start_time}" />
+      <input type="time" class="edit-end"      value="${s.end_time}" />
+      <input type="number" class="edit-capacity" value="${s.capacity}" min="1" />
+      <input type="url"  class="edit-link"     value="${s.meeting_link}" />
+      <button class="btn-save-edit" data-id="${s.session_id}">Save Changes</button>
+      <button class="btn-cancel-edit" data-id="${s.session_id}">Cancel</button>
+      <p class="edit-msg" id="edit-msg-${s.session_id}"></p>
+    </div>
+
+    <!-- Students list (hidden by default) -->
+    <div class="students-list" id="students-${s.session_id}" style="display:none; margin-top:12px;">
+      <p>Loading students...</p>
+    </div>
+  `;
+
+      // EDIT — toggle form
+      card.querySelector(".btn-edit").addEventListener("click", () => {
+        const form = document.getElementById(`edit-${s.session_id}`);
+        form.style.display = form.style.display === "none" ? "block" : "none";
+      });
+
+      // CANCEL EDIT — hide form
+      card.querySelector(".btn-cancel-edit").addEventListener("click", () => {
+        document.getElementById(`edit-${s.session_id}`).style.display = "none";
+      });
+
+      // SAVE EDIT
+      card
+        .querySelector(".btn-save-edit")
+        .addEventListener("click", async () => {
+          const form = document.getElementById(`edit-${s.session_id}`);
+          const updatedData = {
+            subject: form.querySelector(".edit-subject").value,
+            day_of_week: form.querySelector(".edit-day").value,
+            start_time: form.querySelector(".edit-start").value,
+            end_time: form.querySelector(".edit-end").value,
+            capacity: parseInt(form.querySelector(".edit-capacity").value),
+            meeting_link: form.querySelector(".edit-link").value,
+          };
+
+          const result = await editSession(s.session_id, updatedData);
+          const msg = document.getElementById(`edit-msg-${s.session_id}`);
+
+          if (result.error) {
+            msg.style.color = "red";
+            msg.textContent = result.error;
+          } else {
+            msg.style.color = "green";
+            msg.textContent = "Session updated!";
+            setTimeout(() => {
+              form.style.display = "none";
+              loadTutorSessionList(tutorID); // refresh list
+            }, 1000);
+          }
+        });
+
+      // VIEW STUDENTS
+      card
+        .querySelector(".btn-students")
+        .addEventListener("click", async () => {
+          const div = document.getElementById(`students-${s.session_id}`);
+
+          // Toggle off if already open
+          if (div.style.display === "block") {
+            div.style.display = "none";
+            return;
+          }
+
+          div.style.display = "block";
+          div.innerHTML = "<p>Loading students...</p>";
+
+          const students = await getRegisteredStudents(s.session_id);
+
+          if (!students.length) {
+            div.innerHTML = "<p>No students enrolled yet.</p>";
+            return;
+          }
+
+          div.innerHTML = `
+      <strong>Enrolled Students (${students.length}):</strong>
+      <ul style="margin-top:6px;">
+        ${students
+          .map(
+            (st) => `
+          <li style="padding:4px 0;">${st.name} — <span style="color:#666;">${st.email}</span></li>
+        `,
+          )
+          .join("")}
+      </ul>
+    `;
+        });
+
+      // DELETE
       card.querySelector(".btn-delete").addEventListener("click", async (e) => {
         if (!confirm("Delete this session?")) return;
-        const sid = e.target.dataset.id;
-        await deleteSession(sid);
+        await deleteSession(e.target.dataset.id);
         await loadTutorSessionList(tutorID);
       });
+
       list.appendChild(card);
     });
   } catch (err) {
