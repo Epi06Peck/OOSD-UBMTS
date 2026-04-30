@@ -30,7 +30,7 @@ const createSession = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // 🔥 Create session object (BUSINESS LOGIC LAYER)
+    //  Create session object (BUSINESS LOGIC LAYER)
     const session = new TutorSessionImpl(
       null,
       tutor_id,
@@ -42,13 +42,13 @@ const createSession = async (req, res) => {
       meeting_link,
     );
 
-    // 🔥 Let the CLASS validate
+    // Let the CLASS validate
     session.validateSession();
 
     // (Optional) Use Tutor class meaningfully
     const tutor = new TutorImpl(tutor_id, "", "", "");
 
-    // 🔥 DATABASE (CONTROLLER RESPONSIBILITY)
+    // DATABASE (CONTROLLER RESPONSIBILITY)
     const result = await pool.query(
       `INSERT INTO tutor_sessions 
        (tutor_id, subject, day_of_week, start_time, end_time, capacity, current_enrolled, meeting_link)

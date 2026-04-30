@@ -26,5 +26,27 @@ class TutorSessionImpl extends TutorSessionDef_1.TutorSession {
   displaySession() {
     console.log(`Session ${this.sessionID} on ${this.dayOfWeek}`);
   }
+  // validation check before creating session
+  validateSession() {
+    if (!this.subject || this.subject.trim() === "") {
+      throw new Error("Subject is required.");
+    }
+
+    if (!this.dayOfWeek) {
+      throw new Error("Day of week is required.");
+    }
+
+    if (!this.startTime || !this.endTime) {
+      throw new Error("Start and end time are required.");
+    }
+
+    if (this.capacity <= 0) {
+      throw new Error("Capacity must be greater than zero.");
+    }
+
+    if (!this.meetingLink || this.meetingLink.trim() === "") {
+      throw new Error("Meeting link is required.");
+    }
+  }
 }
 exports.TutorSessionImpl = TutorSessionImpl;
