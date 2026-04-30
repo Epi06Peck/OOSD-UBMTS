@@ -15,11 +15,30 @@ class TutorSession {
   }
   // Since these have logic in the .cpp, we'll declare them here
   // In TS definition files, we just describe the signatures
+  // BUSINESS LOGIC
+  // ==========================
   addStudent() {}
   removeStudent() {}
   checkCapacity() {
     return false;
   }
   displaySession() {}
+
+  validateSession() {}
+
+  // ==========================
+  // DATA / PERSISTENCE METHODS
+  // ==========================
+  async createSession() {}
+
+  async enrollStudent() {}
+
+  // Static methods for fetching
+  static async getByTutorId(tutorID) {}
+
+  static async getAll() {}
+
+  static async deleteById(sessionID) {}
 }
+
 exports.TutorSession = TutorSession;

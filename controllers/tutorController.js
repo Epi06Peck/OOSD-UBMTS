@@ -1,4 +1,3 @@
-const pool = require("../db/dbconnection");
 const { TutorImpl } = require("../dist/Tutor");
 const { TutorSessionImpl } = require("../dist/TutorSession");
 
@@ -17,20 +16,6 @@ const createSession = async (req, res) => {
       meeting_link,
     } = req.body;
 
-    // Basic guard (optional)
-    if (
-      !tutor_id ||
-      !subject ||
-      !day_of_week ||
-      !start_time ||
-      !end_time ||
-      !capacity ||
-      !meeting_link
-    ) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    //  Create session object (BUSINESS LOGIC LAYER)
     const session = new TutorSessionImpl(
       null,
       tutor_id,
@@ -42,35 +27,15 @@ const createSession = async (req, res) => {
       meeting_link,
     );
 
-    // Let the CLASS validate
-    session.validateSession();
+    const result = await session.createSession();
 
-    // (Optional) Use Tutor class meaningfully
-    const tutor = new TutorImpl(tutor_id, "", "", "");
-
-    // DATABASE (CONTROLLER RESPONSIBILITY)
-    const result = await pool.query(
-      `INSERT INTO tutor_sessions 
-       (tutor_id, subject, day_of_week, start_time, end_time, capacity, current_enrolled, meeting_link)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
-       RETURNING *`,
-      [
-        tutor_id,
-        session.subject,
-        session.dayOfWeek,
-        session.startTime,
-        session.endTime,
-        session.capacity,
-        session.meetingLink,
-      ],
-    );
     console.log("Session created successfully:", result.rows[0]);
+
     res.status(201).json({
       message: "Session created!",
-      session: result.rows[0],
+      session: result,
     });
   } catch (err) {
-    console.error("Create session error:", err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -80,20 +45,10 @@ const createSession = async (req, res) => {
 // ==========================
 const getTutorSessions = async (req, res) => {
   try {
-    const { tutorID } = req.params;
-
-    // Use TutorImpl to represent the tutor
-    const tutor = new TutorImpl(tutorID, "", "", "");
-
-    const result = await pool.query(
-      `SELECT * FROM tutor_sessions WHERE tutor_id = $1 ORDER BY day_of_week`,
-      [tutorID],
-    );
-
-    res.json(result.rows);
+    const sessions = await TutorSessionImpl.getByTutorId(req.params.tutorID);
+    res.json(sessions);
   } catch (err) {
-    console.error("Get tutor sessions error:", err);
-    res.status(500).json({ error: "Failed to fetch sessions" });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -102,16 +57,10 @@ const getTutorSessions = async (req, res) => {
 // ==========================
 const deleteSession = async (req, res) => {
   try {
-    const { sessionID } = req.params;
-
-    await pool.query(`DELETE FROM tutor_sessions WHERE session_id = $1`, [
-      sessionID,
-    ]);
-
+    await TutorSessionImpl.deleteById(req.params.sessionID);
     res.json({ message: "Session deleted" });
   } catch (err) {
-    console.error("Delete session error:", err);
-    res.status(500).json({ error: "Failed to delete session" });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -120,13 +69,10 @@ const deleteSession = async (req, res) => {
 // ==========================
 const getAllSessions = async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT * FROM tutor_sessions ORDER BY day_of_week`,
-    );
-    res.json(result.rows);
+    const sessions = await TutorSessionImpl.getAll();
+    res.json(sessions);
   } catch (err) {
-    console.error("Get all sessions error:", err);
-    res.status(500).json({ error: "Failed to fetch sessions" });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -136,48 +82,14 @@ const getAllSessions = async (req, res) => {
 // ==========================
 const enrollStudent = async (req, res) => {
   try {
-    const { session_id, student_id } = req.body;
+    const { session_id } = req.body;
 
-    // Fetch current session state from DB
-    const sessionResult = await pool.query(
-      `SELECT * FROM tutor_sessions WHERE session_id = $1`,
-      [session_id],
-    );
-
-    if (sessionResult.rows.length === 0) {
-      return res.status(404).json({ error: "Session not found" });
-    }
-
-    const row = sessionResult.rows[0];
-
-    // Hydrate TutorSessionImpl with real DB values
-    const session = new TutorSessionImpl(
-      row.session_id,
-      row.tutor_id,
-      row.day_of_week,
-      row.start_time,
-      null,
-      row.capacity,
-    );
-    session.currentEnrollment = row.current_enrolled;
-
-    // Class decides if enrolment is allowed
-    if (!session.checkCapacity()) {
-      return res.status(400).json({ error: "Session is full" });
-    }
-
-    // Class says ok — persist to DB
-    session.addStudent(); // updates in-memory count (useful for logging)
-
-    await pool.query(
-      `UPDATE tutor_sessions SET current_enrolled = current_enrolled + 1 WHERE session_id = $1`,
-      [session_id],
-    );
+    const session = new TutorSessionImpl(session_id);
+    await session.enrollStudent();
 
     res.json({ message: "Enrolled successfully!" });
   } catch (err) {
-    console.error("Enroll error:", err);
-    res.status(500).json({ error: "Enrollment failed" });
+    res.status(400).json({ error: err.message });
   }
 };
 
