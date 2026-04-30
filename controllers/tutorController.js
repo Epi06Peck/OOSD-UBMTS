@@ -7,48 +7,71 @@ const { TutorSessionImpl } = require("../dist/TutorSession");
 // ==========================
 const createSession = async (req, res) => {
   try {
-    const { tutor_id, subject, day_of_week, start_time, capacity } = req.body;
+    const {
+      tutor_id,
+      subject,
+      day_of_week,
+      start_time,
+      end_time,
+      capacity,
+      meeting_link,
+    } = req.body;
 
-    if (!tutor_id || !subject || !day_of_week || !start_time || !capacity) {
+    // Basic guard (optional)
+    if (
+      !tutor_id ||
+      !subject ||
+      !day_of_week ||
+      !start_time ||
+      !end_time ||
+      !capacity ||
+      !meeting_link
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Use TutorImpl to represent the tutor — calls createSession() for business logic
-    const tutor = new TutorImpl(tutor_id, "", "", "");
-    tutor.createSession(null); // logs + tracks intent via class
-
-    // Use TutorSessionImpl to validate the session before saving
+    // 🔥 Create session object (BUSINESS LOGIC LAYER)
     const session = new TutorSessionImpl(
       null,
       tutor_id,
+      subject,
       day_of_week,
       start_time,
-      null,
+      end_time,
       capacity,
+      meeting_link,
     );
-    if (capacity < 1) {
-      return res.status(400).json({ error: "Capacity must be at least 1" });
-    }
 
-    // Persist to DB
+    // 🔥 Let the CLASS validate
+    session.validateSession();
+
+    // (Optional) Use Tutor class meaningfully
+    const tutor = new TutorImpl(tutor_id, "", "", "");
+
+    // 🔥 DATABASE (CONTROLLER RESPONSIBILITY)
     const result = await pool.query(
-      `INSERT INTO tutor_sessions (tutor_id, subject, day_of_week, start_time, capacity, current_enrolled)
-       VALUES ($1, $2, $3, $4, $5, 0) RETURNING *`,
+      `INSERT INTO tutor_sessions 
+       (tutor_id, subject, day_of_week, start_time, end_time, capacity, current_enrolled, meeting_link)
+       VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
+       RETURNING *`,
       [
         tutor.user_id,
-        subject,
+        session.subject,
         session.dayOfWeek,
         session.startTime,
+        session.endTime,
         session.capacity,
+        session.meetingLink,
       ],
     );
 
-    res
-      .status(201)
-      .json({ message: "Session created!", session: result.rows[0] });
+    res.status(201).json({
+      message: "Session created!",
+      session: result.rows[0],
+    });
   } catch (err) {
     console.error("Create session error:", err);
-    res.status(500).json({ error: "Failed to create session" });
+    res.status(400).json({ error: err.message });
   }
 };
 
