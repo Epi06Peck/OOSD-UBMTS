@@ -33,12 +33,11 @@ class TutorSessionImpl extends TutorSessionDef_1.TutorSession {
   // ==========================
   async createSession() {
     this.validateSession();
-
     const result = await dbconnection_1.default.query(
-      `INSERT INTO tutor_sessions 
-       (tutor_id, subject, day_of_week, start_time, end_time, capacity, current_enrolled, meeting_link)
-       VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
-       RETURNING *`,
+      `INSERT INTO tutor_sessions
+     (tutor_id, subject, day_of_week, start_time, end_time, capacity, current_enrolled, meeting_link)
+     VALUES ($1, $2, $3, $4, $5, $6, 0, $7)
+     RETURNING *`,
       [
         this.tutorID,
         this.subject,
@@ -50,8 +49,11 @@ class TutorSessionImpl extends TutorSessionDef_1.TutorSession {
       ],
     );
 
-    this.sessionID = result.rows[0].session_id;
-    return result.rows[0];
+    const row = result.rows[0]; // ← grab safely
+    if (!row) throw new Error("Insert succeeded but no row returned");
+
+    this.sessionID = row.session_id;
+    return row;
   }
 
   // GET sessions by tutor

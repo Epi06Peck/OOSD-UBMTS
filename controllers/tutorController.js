@@ -4,6 +4,7 @@ const { TutorSessionImpl } = require("../dist/TutorSession");
 // ==========================
 // CREATE SESSION
 // ==========================
+
 const createSession = async (req, res) => {
   try {
     const {
@@ -26,16 +27,12 @@ const createSession = async (req, res) => {
       capacity,
       meeting_link,
     );
-
-    const result = await session.createSession();
-
-    console.log("Session created successfully:", result.rows[0]);
-
-    res.status(201).json({
-      message: "Session created!",
-      session: result,
-    });
+    const savedSession = await session.createSession();
+    res
+      .status(201)
+      .json({ message: "Session created!", session: savedSession });
   } catch (err) {
+    console.error("Create session error:", err.message); // ← will now tell you exactly what threw
     res.status(400).json({ error: err.message });
   }
 };
