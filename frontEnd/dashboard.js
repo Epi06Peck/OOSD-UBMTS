@@ -8,6 +8,7 @@ import {
   deleteSession,
   editSession,
   getRegisteredStudents,
+  adminDeleteTutorSession,
 } from "./ubmtApi.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -502,10 +503,7 @@ async function loadAdminUI(user) {
           .querySelector(".btn-delete-admin")
           .addEventListener("click", async (e) => {
             if (!confirm("Delete this session?")) return;
-            await fetch(
-              `http://localhost:3000/api/admin/sessions/${e.target.dataset.id}`,
-              { method: "DELETE" },
-            );
+            await adminDeleteTutorSession(e.target.dataset.id);
             loadAdminUI(user);
           });
         sessDiv.appendChild(card);

@@ -5,6 +5,7 @@ const path = require("path");
 const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const tutorRoutes = require("./routes/tutorRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.static(path.join(__dirname, "frontEnd")));
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/tutor", tutorRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Default route
 app.get("/", (req, res) => {

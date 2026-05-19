@@ -85,3 +85,41 @@ export async function getRegisteredStudents(sessionID) {
   const res = await fetch(`${BASE}/tutor/sessions/${sessionID}/students`);
   return res.json();
 }
+
+// ==========================
+// ADMIN: GET DASHBOARD
+// ==========================
+export async function getAdminDashboard() {
+  const res = await fetch(`${BASE}/admin/dashboard`);
+  return res.json();
+}
+
+// ==========================
+// ADMIN: APPROVE TUTOR
+// ==========================
+export async function approveTutor(tutorID) {
+  const res = await fetch(`${BASE}/admin/approve-tutor/${tutorID}`, {
+    method: "PUT",
+  });
+  return res.json();
+}
+
+// ==========================
+// ADMIN: REMOVE TUTOR
+// ==========================
+export async function removeTutor(tutorID) {
+  const res = await fetch(`${BASE}/admin/remove-tutor/${tutorID}`, {
+    method: "DELETE",
+  });
+  return res.json();
+}
+
+// ==========================
+// ADMIN: DELETE TUTOR SESSION
+// ==========================
+export async function adminDeleteTutorSession(sessionID) {
+  const res = await fetch(`${BASE}/admin/delete-session/${sessionID}`, {
+    method: "DELETE",
+  });
+  return res.json();
+}

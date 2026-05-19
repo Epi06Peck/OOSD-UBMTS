@@ -1,25 +1,80 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminImpl = void 0;
-const AdminDef_1 = require("./AdminDef");
-class AdminImpl extends AdminDef_1.Admin {
-    constructor(id, name, email, password) {
-        super(id, name, email, password);
+const dbconnection_1 = require("../db/dbconnection");
+const { Admin } = require("./AdminDef");
+
+class AdminImpl extends Admin {
+  constructor(id, name, email, password) {
+    super(id, name, email, password);
+  }
+
+  // ==========================
+  // GET PENDING TUTORS
+  // ==========================
+  async getPendingTutors() {
+    const result = await dbconnection_1.default.query(
+      "SELECT * FROM users WHERE role_name = 'Tutor' AND approved = false",
+    );
+    return result.rows;
+  }
+
+  // ==========================
+  // APPROVE TUTOR
+  // ==========================
+  async approveTutor(tutorID) {
+    const result = await dbconnection_1.default.query(
+      "UPDATE users SET approved = true WHERE user_id = $1 AND role_name = 'Tutor'",
+      [tutorID],
+    );
+
+    if (result.rowCount === 0) {
+      throw new Error("Tutor not found");
     }
-    deleteTutorSession(sessionID) {
-        console.log(`Deleted session ${sessionID}`);
+
+    return `Tutor ${tutorID} approved successfully`;
+  }
+
+  // ==========================
+  // REMOVE TUTOR
+  // ==========================
+  async removeTutor(tutorID) {
+    const result = await dbconnection_1.default.query(
+      "DELETE FROM users WHERE user_id = $1 AND role_name = 'Tutor'",
+      [tutorID],
+    );
+
+    if (result.rowCount === 0) {
+      throw new Error("Tutor not found");
     }
-    removeTutor(tutorID) {
-        console.log(`Removed tutor ${tutorID}`);
+
+    return `Tutor ${tutorID} removed successfully`;
+  }
+
+  // ==========================
+  // DELETE SESSION
+  // ==========================
+  async deleteTutorSession(sessionID) {
+    const result = await dbconnection_1.default.query(
+      "DELETE FROM tutor_sessions WHERE session_id = $1",
+      [sessionID],
+    );
+
+    if (result.rowCount === 0) {
+      throw new Error("Session not found");
     }
-    approveTutor(tutorID) {
-        console.log(`Approved tutor ${tutorID}`);
-    }
-    dashboard() {
-        console.log("Admin Dashboard:");
-        console.log("- Approve tutors");
-        console.log("- Delete sessions");
-        console.log("- Remove tutors");
-    }
+
+    return `Session ${sessionID} deleted successfully`;
+  }
+
+  // ==========================
+  // DASHBOARD
+  // ==========================
+  dashboard() {
+    return {
+      actions: ["approveTutor", "removeTutor", "deleteTutorSession"],
+    };
+  }
 }
-exports.AdminImpl = AdminImpl;
+
+module.exports = { AdminImpl };
